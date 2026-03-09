@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS-IAP V6.1 - Fixed Numbers</title>
+    <title>POS-IAP V6.2 - Instant Save</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --royal-blue: #4169E1; --success: #198754; --danger: #dc3545; --purple: #6f42c1; --bg: #ffffff; --ck-blue: #007bff; }
@@ -44,10 +44,10 @@
         <div class="tab-item" id="t-buy" onclick="setMode('BUY')">NHẬP HÀNG</div>
     </div>
     <button class="btn-mic" id="btn-mic">🎤</button>
-    <div id="mic-result" style="font-size: 13px; color: var(--royal-blue); margin-top: 10px; font-weight: 500;">Sẵn sàng nhận lệnh...</div>
+    <div id="mic-result" style="font-size: 13px; color: var(--royal-blue); margin-top: 10px; font-weight: 500;">Chạm để nói...</div>
 </div>
 
-<div id="cart-items" style="min-height: 100px; padding-top: 10px;"></div>
+<div id="cart-items" style="min-height: 50px;"></div>
 
 <div class="total-bar">
     <span>TỔNG:</span>
@@ -66,7 +66,7 @@
 <div class="bottom-reports">
     <div style="display:flex; justify-content:space-between; align-items:center">
         <h4 style="margin:0; font-size:16px; font-weight: 800; color: var(--royal-blue);">TỔNG HỢP</h4>
-        <select id="filter-select" onchange="refreshAll()" style="font-size:12px; border:1px solid #ddd; background:#fff; padding:6px 10px; border-radius:8px">
+        <select id="filter-select" onchange="refreshAll()" style="font-size: 12px; border: 1px solid #ddd; background: #fff; padding: 6px 10px; border-radius: 8px;">
             <option value="day">Hôm nay</option>
             <option value="month">Tháng này</option>
             <option value="year">Năm nay</option>
@@ -88,132 +88,71 @@
 
 <script>
     let currentMode = 'SELL', cart = [];
-    let db = JSON.parse(localStorage.getItem('pos_iap_v61_db')) || { history: [] };
+    let db = JSON.parse(localStorage.getItem('pos_iap_v62_db')) || { history: [] };
 
-    // --- HÀM XỬ LÝ SỐ TIỀN THÔNG MINH ---
     function parseVietnameseCurrency(text) {
-        // Chuẩn hóa văn bản
-        let str = text.toLowerCase()
-            .replace(/,/g, '')
-            .replace(/nghìn/g, 'ngàn')
-            .replace(/mươi/g, ' mươi ')
-            .replace(/linh/g, ' không ')
-            .replace(/lẻ/g, ' không ');
-
+        let str = text.toLowerCase().replace(/,/g, '').replace(/nghìn/g, 'ngàn').replace(/mươi/g, ' mươi ').replace(/linh/g, ' không ').replace(/lẻ/g, ' không ');
         const dict = { "không":0, "một":1, "mốt":1, "hai":2, "ba":3, "bốn":4, "tư":4, "năm":5, "lăm":5, "sáu":6, "bảy":7, "tám":8, "chín":9, "mười":10 };
         const multipliers = { "trăm":100, "ngàn":1000, "triệu":1000000, "k":1000 };
-
         let words = str.split(/\s+/).filter(w => w.length > 0);
-        let total = 0;
-        let currentGroup = 0;
-
+        let total = 0, currentGroup = 0;
         words.forEach(w => {
-            if (!isNaN(w)) {
-                currentGroup += parseInt(w);
-            } else if (dict[w] !== undefined) {
-                currentGroup += dict[w];
-            } else if (multipliers[w] !== undefined) {
-                // Xử lý trường hợp "năm mươi ngàn"
+            if (!isNaN(w)) currentGroup += parseInt(w);
+            else if (dict[w] !== undefined) currentGroup += dict[w];
+            else if (multipliers[w] !== undefined) {
                 if (currentGroup === 0 && w !== "mười") currentGroup = 1;
-                
-                if (w === "ngàn" || w === "triệu") {
-                    total += (currentGroup || 1) * multipliers[w];
-                    currentGroup = 0;
-                } else if (w === "trăm") {
-                    currentGroup *= 100;
-                }
-            } else if (w === "mươi") {
-                if (currentGroup < 10) currentGroup *= 10;
-            }
+                if (w === "ngàn" || w === "triệu") { total += (currentGroup || 1) * multipliers[w]; currentGroup = 0; }
+                else if (w === "trăm") currentGroup *= 100;
+            } else if (w === "mươi") if (currentGroup < 10) currentGroup *= 10;
         });
-
         let finalResult = total + currentGroup;
-        
-        // Nếu kết quả nhỏ hơn 100 (ví dụ nói "năm mươi" mà không nói "ngàn")
-        // Tự động hiểu là nghìn cho phù hợp thực tế bán lẻ Việt Nam
-        if (finalResult > 0 && finalResult < 1000) {
-            finalResult *= 1000;
-        }
-
+        if (finalResult > 0 && finalResult < 1000) finalResult *= 1000;
         return finalResult;
     }
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'vi-VN';
-
-    document.getElementById('btn-mic').onclick = () => {
-        recognition.start();
-        document.getElementById('btn-mic').classList.add('active');
-    };
+    document.getElementById('btn-mic').onclick = () => { recognition.start(); document.getElementById('btn-mic').classList.add('active'); };
 
     recognition.onresult = (e) => {
         const text = e.results[0][0].transcript.toLowerCase();
         document.getElementById('btn-mic').classList.remove('active');
         document.getElementById('mic-result').innerText = "Vừa nghe: " + text;
-
-        // Tách Tên và Giá bằng cách tìm vị trí số hoặc chữ số đầu tiên
         const numMarkers = ["0","1","2","3","4","5","6","7","8","9","không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín","mười"];
-        let splitIdx = -1;
-        let words = text.split(' ');
-        
-        for(let i=0; i<words.length; i++){
-            if(numMarkers.some(m => words[i].startsWith(m))){
-                splitIdx = i;
-                break;
-            }
-        }
-
+        let splitIdx = -1; let words = text.split(' ');
+        for(let i=0; i<words.length; i++) if(numMarkers.some(m => words[i].startsWith(m))){ splitIdx = i; break; }
         if(splitIdx !== -1){
             let name = words.slice(0, splitIdx).join(' ') || "Hàng hóa";
-            let priceText = words.slice(splitIdx).join(' ');
-            let price = parseVietnameseCurrency(priceText);
-            
-            if(price > 0){
-                cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price });
-                renderCart();
-            }
+            let price = parseVietnameseCurrency(words.slice(splitIdx).join(' '));
+            if(price > 0){ cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price }); renderCart(); }
         }
     };
 
     function renderCart() {
-        const cont = document.getElementById('cart-items');
-        cont.innerHTML = '';
-        let total = 0;
+        const cont = document.getElementById('cart-items'); cont.innerHTML = ''; let total = 0;
         cart.forEach((item, i) => {
             total += item.price;
-            cont.innerHTML += `<div class="item-row-cart">
-                <span>${item.name}</span>
-                <span><b>${item.price.toLocaleString('vi-VN')}đ</b> <button onclick="cart.splice(${i},1);renderCart()" style="border:none;background:none;color:#ccc;margin-left:10px">✕</button></span>
-            </div>`;
+            cont.innerHTML += `<div class="item-row-cart"><span>${item.name}</span><span><b>${item.price.toLocaleString('vi-VN')}đ</b> <button onclick="cart.splice(${i},1);renderCart()" style="border:none;background:none;color:#ccc;margin-left:10px">✕</button></span></div>`;
         });
         document.getElementById('total-val').innerText = total.toLocaleString('vi-VN') + 'đ';
     }
 
+    // --- LƯU TRỮ TỨC THÌ (BỎ THÔNG BÁO) ---
     function saveData(method) {
         if(cart.length === 0) return;
         const now = new Date();
-        cart.forEach(i => db.history.push({ 
-            id: Date.now()+Math.random(), 
-            date: now.toLocaleString('vi-VN'), 
-            rawDate: now.getTime(), 
-            type: currentMode, 
-            method, 
-            name: i.name, 
-            price: i.price 
-        }));
-        localStorage.setItem('pos_iap_v61_db', JSON.stringify(db));
-        cart = []; renderCart(); refreshAll(); alert("Đã hoàn tất!");
+        cart.forEach(i => db.history.push({ id: Date.now()+Math.random(), date: now.toLocaleString('vi-VN'), rawDate: now.getTime(), type: currentMode, method, name: i.name, price: i.price }));
+        localStorage.setItem('pos_iap_v62_db', JSON.stringify(db));
+        cart = []; renderCart(); refreshAll();
+        // Không sử dụng alert("Đã hoàn tất!")
     }
 
     function refreshAll() {
         const filter = document.getElementById('filter-select').value;
-        const now = new Date();
-        let s = 0, b = 0; const inv = {};
+        const now = new Date(); let s = 0, b = 0; const inv = {};
         db.history.forEach(i => {
             const iD = new Date(i.rawDate);
-            let m = (filter==='day' && iD.toDateString()===now.toDateString()) || 
-                    (filter==='month' && iD.getMonth()===now.getMonth()) || 
-                    (filter==='year' && iD.getFullYear()===now.getFullYear());
+            let m = (filter==='day' && iD.toDateString()===now.toDateString()) || (filter==='month' && iD.getMonth()===now.getMonth()) || (filter==='year' && iD.getFullYear()===now.getFullYear());
             if(m) { if(i.type==='SELL') s+=i.price; else b+=i.price; }
             if(!inv[i.name]) inv[i.name] = { in: 0, out: 0 };
             if(i.type==='SELL') inv[i.name].out += i.price; else inv[i.name].in += i.price;
@@ -236,17 +175,11 @@
     }
 
     function exportExcel() {
-        const data = db.history.map((i, idx) => ({ 
-            "STT": idx+1, 
-            "Nhóm": i.type==='SELL' ? `Bán (${i.method})` : "Mua hàng", 
-            "Ngày tháng": i.date, 
-            "Giao dịch": i.name, 
-            "Số tiền": i.price 
-        }));
+        const data = db.history.map((i, idx) => ({ "STT": idx+1, "Nhóm": i.type==='SELL' ? `Bán (${i.method})` : "Mua hàng", "Ngày tháng": i.date, "Giao dịch": i.name, "Số tiền": i.price }));
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "POS_IAP");
-        XLSX.writeFile(wb, "POS_IAP_Report.xlsx");
+        XLSX.writeFile(wb, "POS_IAP_V6.2.xlsx");
     }
 
     refreshAll();
