@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS-IAP V6.2 - Instant Save</title>
+    <title>POS-IAP V6.3 - Detailed Sales</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --royal-blue: #4169E1; --success: #198754; --danger: #dc3545; --purple: #6f42c1; --bg: #ffffff; --ck-blue: #007bff; }
@@ -25,9 +25,12 @@
         .btn-pay { flex: 1; padding: 18px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         .bottom-reports { border-top: 10px solid #f1f3f5; padding: 20px 15px; background: white; }
         .mini-stat { padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
+        .section-title { margin: 25px 0 10px 0; font-size: 15px; font-weight: 800; color: #333; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         th { text-align: left; color: #aaa; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
         td { padding: 12px 0; border-bottom: 1px solid #fcfcfc; }
+        .detail-row { font-size: 12px; border-bottom: 1px dashed #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .detail-time { color: #999; font-size: 10px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -66,7 +69,7 @@
 <div class="bottom-reports">
     <div style="display:flex; justify-content:space-between; align-items:center">
         <h4 style="margin:0; font-size:16px; font-weight: 800; color: var(--royal-blue);">TỔNG HỢP</h4>
-        <select id="filter-select" onchange="refreshAll()" style="font-size: 12px; border: 1px solid #ddd; background: #fff; padding: 6px 10px; border-radius: 8px;">
+        <select id="filter-select" onchange="refreshAll()" style="font-size: 12px; border: 1px solid #ddd; padding: 6px; border-radius: 8px;">
             <option value="day">Hôm nay</option>
             <option value="month">Tháng này</option>
             <option value="year">Năm nay</option>
@@ -78,7 +81,10 @@
         <div class="mini-stat"><small>Tiền nhập</small><br><b id="st-buy">0đ</b></div>
     </div>
 
-    <div style="margin: 20px 0 10px 0; font-weight: 800;">TỒN KHO <button onclick="exportExcel()" style="float:right; font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button></div>
+    <div class="section-title">SỔ CHI TIẾT DOANH THU</div>
+    <div id="sales-detail-list" style="max-height: 250px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;"></div>
+
+    <div style="margin: 25px 0 10px 0; font-weight: 800;">TỒN KHO <button onclick="exportExcel()" style="float:right; font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button></div>
     <table>
         <thead><tr><th>SẢN PHẨM</th><th align="right">NHẬP</th><th align="right">BÁN</th><th align="right">TỒN</th></tr></thead>
         <tbody id="inv-body"></tbody>
@@ -88,7 +94,7 @@
 
 <script>
     let currentMode = 'SELL', cart = [];
-    let db = JSON.parse(localStorage.getItem('pos_iap_v62_db')) || { history: [] };
+    let db = JSON.parse(localStorage.getItem('pos_iap_v63_db')) || { history: [] };
 
     function parseVietnameseCurrency(text) {
         let str = text.toLowerCase().replace(/,/g, '').replace(/nghìn/g, 'ngàn').replace(/mươi/g, ' mươi ').replace(/linh/g, ' không ').replace(/lẻ/g, ' không ');
@@ -137,19 +143,20 @@
         document.getElementById('total-val').innerText = total.toLocaleString('vi-VN') + 'đ';
     }
 
-    // --- LƯU TRỮ TỨC THÌ (BỎ THÔNG BÁO) ---
     function saveData(method) {
         if(cart.length === 0) return;
         const now = new Date();
         cart.forEach(i => db.history.push({ id: Date.now()+Math.random(), date: now.toLocaleString('vi-VN'), rawDate: now.getTime(), type: currentMode, method, name: i.name, price: i.price }));
-        localStorage.setItem('pos_iap_v62_db', JSON.stringify(db));
+        localStorage.setItem('pos_iap_v63_db', JSON.stringify(db));
         cart = []; renderCart(); refreshAll();
-        // Không sử dụng alert("Đã hoàn tất!")
     }
 
     function refreshAll() {
         const filter = document.getElementById('filter-select').value;
         const now = new Date(); let s = 0, b = 0; const inv = {};
+        const contDetail = document.getElementById('sales-detail-list');
+        contDetail.innerHTML = '';
+
         db.history.forEach(i => {
             const iD = new Date(i.rawDate);
             let m = (filter==='day' && iD.toDateString()===now.toDateString()) || (filter==='month' && iD.getMonth()===now.getMonth()) || (filter==='year' && iD.getFullYear()===now.getFullYear());
@@ -157,8 +164,27 @@
             if(!inv[i.name]) inv[i.name] = { in: 0, out: 0 };
             if(i.type==='SELL') inv[i.name].out += i.price; else inv[i.name].in += i.price;
         });
+
+        // Update Stats
         document.getElementById('st-sell').innerText = s.toLocaleString('vi-VN')+'đ';
         document.getElementById('st-buy').innerText = b.toLocaleString('vi-VN')+'đ';
+
+        // Update Sales Detail (Chỉ lấy Bán hàng và lọc theo thời gian)
+        const filteredSales = db.history.filter(i => {
+            if (i.type !== 'SELL') return false;
+            const iD = new Date(i.rawDate);
+            if(filter==='day') return iD.toDateString()===now.toDateString();
+            if(filter==='month') return iD.getMonth()===now.getMonth() && iD.getFullYear()===now.getFullYear();
+            if(filter==='year') return iD.getFullYear()===now.getFullYear();
+            return true;
+        }).reverse();
+
+        if(filteredSales.length === 0) contDetail.innerHTML = '<p style="text-align:center;color:#999;font-size:11px">Chưa có dữ liệu bán hàng.</p>';
+        filteredSales.forEach(item => {
+            contDetail.innerHTML += `<div class="detail-row"><div><b>${item.name}</b> (${item.method})<br><span class="detail-time">${item.date}</span></div><div><b style="color:var(--success)">+${item.price.toLocaleString('vi-VN')}đ</b> <button style="border:none;background:none;color:#ccc;margin-left:5px" onclick="deleteItem('${item.id}')">✕</button></div></div>`;
+        });
+
+        // Update Inventory
         const tbody = document.getElementById('inv-body'); tbody.innerHTML = '';
         for(let n in inv) {
             const tk = inv[n].in - inv[n].out;
@@ -166,12 +192,14 @@
         }
     }
 
+    function deleteItem(id) { if(confirm("Xóa dòng này?")){ db.history = db.history.filter(i => i.id.toString() !== id.toString()); localStorage.setItem('pos_iap_v63_db', JSON.stringify(db)); refreshAll(); } }
+
     function setMode(m) {
         currentMode = m;
-        document.getElementById('t-sell').classList.toggle('active', m==='SELL');
-        document.getElementById('t-buy').classList.toggle('active', m==='BUY');
-        document.getElementById('sell-actions').classList.toggle('hidden', m!=='SELL');
-        document.getElementById('buy-actions').classList.toggle('hidden', m!=='BUY');
+        document.getElementById('t-sell').classList.toggle('active', m === 'SELL');
+        document.getElementById('t-buy').classList.toggle('active', m === 'BUY');
+        document.getElementById('sell-actions').classList.toggle('hidden', m !== 'SELL');
+        document.getElementById('buy-actions').classList.toggle('hidden', m !== 'BUY');
     }
 
     function exportExcel() {
@@ -179,7 +207,7 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "POS_IAP");
-        XLSX.writeFile(wb, "POS_IAP_V6.2.xlsx");
+        XLSX.writeFile(wb, "POS_IAP_Report_V6.3.xlsx");
     }
 
     refreshAll();
