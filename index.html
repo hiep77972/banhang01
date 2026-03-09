@@ -3,49 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS-IAP Business V5.8</title>
+    <title>POS-IAP V6.1 - Fixed Numbers</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --royal-blue: #4169E1; --success: #198754; --danger: #dc3545; --purple: #6f42c1; --bg: #ffffff; }
+        :root { --royal-blue: #4169E1; --success: #198754; --danger: #dc3545; --purple: #6f42c1; --bg: #ffffff; --ck-blue: #007bff; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        
         .brand-header { background: var(--royal-blue); padding: 18px 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .logo-box { width: 50px; height: 35px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
         .logo-text { color: var(--royal-blue); font-weight: 900; font-size: 14px; letter-spacing: -1px; }
         .brand-name { font-size: 25.3px; font-weight: 800; color: white; letter-spacing: 1px; }
-
         .action-header { background: #f8f9fa; padding: 15px; text-align: center; border-bottom: 1px solid #eee; }
         .nav-tabs { display: flex; background: #e2e6ea; margin: 0 auto 15px auto; border-radius: 25px; overflow: hidden; max-width: 260px; }
         .tab-item { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; cursor: pointer; color: #666; }
         .tab-item.active { background: var(--royal-blue); color: white; }
-        
         .btn-mic { width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--royal-blue); color: white; font-size: 30px; box-shadow: 0 4px 15px rgba(65,105,225,0.4); }
         .btn-mic.active { background: var(--danger); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        
-        .temp-cart { padding: 10px 20px; min-height: 80px; }
-        .item-row-cart { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f1f1; font-size: 16px; }
+        .item-row-cart { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #f1f1f1; font-size: 16px; }
         .total-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff3cd; margin: 10px 15px; border-radius: 12px; font-weight: 800; font-size: 20px; color: #856404; border: 1px solid #ffeeba; }
-        
-        .btn-save { width: calc(100% - 30px); margin: 0 15px 20px 15px; padding: 18px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 18px; background: var(--success); box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-transform: uppercase; }
-
+        .payment-group { display: flex; gap: 10px; padding: 0 15px 20px 15px; }
+        .btn-pay { flex: 1; padding: 18px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         .bottom-reports { border-top: 10px solid #f1f3f5; padding: 20px 15px; background: white; }
-        .report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
-        .mini-stat { padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; }
-        .mini-stat label { font-size: 11px; color: #888; display: block; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
-        .mini-stat b { font-size: 16px; color: #222; }
-
-        .section-title { margin: 25px 0 10px 0; font-size: 15px; font-weight: 800; color: #333; display: flex; justify-content: space-between; align-items: center; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { text-align: left; color: #aaa; font-weight: 600; font-size: 11px; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
-        td { padding: 10px 0; border-bottom: 1px solid #fcfcfc; }
-        
-        .detail-row { font-size: 12px; border-bottom: 1px dashed #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
-        .detail-time { color: #999; font-size: 10px; display: block; }
-        .btn-del-small { color: #ccc; border: none; background: none; font-size: 16px; padding: 5px; margin-left: 10px; }
-
-        .tag { display: inline-block; background: #f0f4ff; color: var(--royal-blue); padding: 8px 14px; border-radius: 20px; margin: 4px; font-size: 12px; border: 1px solid #dce4ff; }
-        .btn-reset { margin-top: 50px; background: none; border: 1px solid #eee; color: #ccc; padding: 12px; border-radius: 8px; font-size: 11px; width: 100%; }
+        .mini-stat { padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        th { text-align: left; color: #aaa; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
+        td { padding: 12px 0; border-bottom: 1px solid #fcfcfc; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -61,19 +44,24 @@
         <div class="tab-item" id="t-buy" onclick="setMode('BUY')">NHẬP HÀNG</div>
     </div>
     <button class="btn-mic" id="btn-mic">🎤</button>
-    <div id="tags-area" style="margin-top:15px"></div>
+    <div id="mic-result" style="font-size: 13px; color: var(--royal-blue); margin-top: 10px; font-weight: 500;">Sẵn sàng nhận lệnh...</div>
 </div>
 
-<div class="temp-cart">
-    <div id="cart-items"></div>
-</div>
+<div id="cart-items" style="min-height: 100px; padding-top: 10px;"></div>
 
 <div class="total-bar">
     <span>TỔNG:</span>
     <span id="total-val">0đ</span>
 </div>
 
-<button class="btn-save" id="btn-main-action" onclick="saveData()">THANH TOÁN</button>
+<div id="sell-actions" class="payment-group">
+    <button class="btn-pay" style="background: var(--success)" onclick="saveData('TIỀN MẶT')">TIỀN MẶT</button>
+    <button class="btn-pay" style="background: var(--ck-blue)" onclick="saveData('CHUYỂN KHOẢN')">CHUYỂN KHOẢN</button>
+</div>
+
+<div id="buy-actions" class="hidden" style="padding: 0 15px 20px 15px;">
+    <button class="btn-pay" style="background: var(--purple); width: 100%;" onclick="saveData('MUA HÀNG')">DUYỆT MUA HÀNG</button>
+</div>
 
 <div class="bottom-reports">
     <div style="display:flex; justify-content:space-between; align-items:center">
@@ -85,181 +73,180 @@
         </select>
     </div>
 
-    <div class="report-grid">
-        <div class="mini-stat"><label>Doanh thu (Bán)</label><b id="st-sell">0đ</b></div>
-        <div class="mini-stat"><label>Tiền nhập hàng</label><b id="st-buy">0đ</b></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+        <div class="mini-stat"><small>Doanh thu</small><br><b id="st-sell">0đ</b></div>
+        <div class="mini-stat"><small>Tiền nhập</small><br><b id="st-buy">0đ</b></div>
     </div>
 
-    <div class="section-title"><span>SỔ CHI TIẾT DOANH THU</span></div>
-    <div id="sales-detail-list" style="max-height: 250px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px;"></div>
-
-    <div class="section-title">
-        <span>TỒN KHO</span>
-        <button onclick="exportExcel()" style="font-size:11px; color:var(--royal-blue); background:none; border:1px solid var(--royal-blue); padding:4px 10px; border-radius:6px">Xuất Excel</button>
-    </div>
+    <div style="margin: 20px 0 10px 0; font-weight: 800;">TỒN KHO <button onclick="exportExcel()" style="float:right; font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button></div>
     <table>
-        <thead><tr><th>SẢN PHẨM</th><th style="text-align:right">NHẬP</th><th style="text-align:right">BÁN</th><th style="text-align:right">TỒN</th></tr></thead>
+        <thead><tr><th>SẢN PHẨM</th><th align="right">NHẬP</th><th align="right">BÁN</th><th align="right">TỒN</th></tr></thead>
         <tbody id="inv-body"></tbody>
     </table>
-
-    <button class="btn-reset" onclick="resetDatabase()">RESET HỆ THỐNG POS-IAP</button>
+    <button onclick="if(prompt('Nhập XOA để reset:')==='XOA'){localStorage.clear();location.reload();}" style="margin-top:40px; border:none; background:none; color:#ccc; width:100%; font-size:10px;">RESET HỆ THỐNG POS-IAP</button>
 </div>
 
 <script>
-    let currentMode = 'SELL';
-    let cart = [];
-    let db = JSON.parse(localStorage.getItem('pos_iap_v58_db')) || { history: [] };
+    let currentMode = 'SELL', cart = [];
+    let db = JSON.parse(localStorage.getItem('pos_iap_v61_db')) || { history: [] };
+
+    // --- HÀM XỬ LÝ SỐ TIỀN THÔNG MINH ---
+    function parseVietnameseCurrency(text) {
+        // Chuẩn hóa văn bản
+        let str = text.toLowerCase()
+            .replace(/,/g, '')
+            .replace(/nghìn/g, 'ngàn')
+            .replace(/mươi/g, ' mươi ')
+            .replace(/linh/g, ' không ')
+            .replace(/lẻ/g, ' không ');
+
+        const dict = { "không":0, "một":1, "mốt":1, "hai":2, "ba":3, "bốn":4, "tư":4, "năm":5, "lăm":5, "sáu":6, "bảy":7, "tám":8, "chín":9, "mười":10 };
+        const multipliers = { "trăm":100, "ngàn":1000, "triệu":1000000, "k":1000 };
+
+        let words = str.split(/\s+/).filter(w => w.length > 0);
+        let total = 0;
+        let currentGroup = 0;
+
+        words.forEach(w => {
+            if (!isNaN(w)) {
+                currentGroup += parseInt(w);
+            } else if (dict[w] !== undefined) {
+                currentGroup += dict[w];
+            } else if (multipliers[w] !== undefined) {
+                // Xử lý trường hợp "năm mươi ngàn"
+                if (currentGroup === 0 && w !== "mười") currentGroup = 1;
+                
+                if (w === "ngàn" || w === "triệu") {
+                    total += (currentGroup || 1) * multipliers[w];
+                    currentGroup = 0;
+                } else if (w === "trăm") {
+                    currentGroup *= 100;
+                }
+            } else if (w === "mươi") {
+                if (currentGroup < 10) currentGroup *= 10;
+            }
+        });
+
+        let finalResult = total + currentGroup;
+        
+        // Nếu kết quả nhỏ hơn 100 (ví dụ nói "năm mươi" mà không nói "ngàn")
+        // Tự động hiểu là nghìn cho phù hợp thực tế bán lẻ Việt Nam
+        if (finalResult > 0 && finalResult < 1000) {
+            finalResult *= 1000;
+        }
+
+        return finalResult;
+    }
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'vi-VN';
 
-    document.getElementById('btn-mic').onclick = () => { recognition.start(); document.getElementById('btn-mic').classList.add('active'); };
+    document.getElementById('btn-mic').onclick = () => {
+        recognition.start();
+        document.getElementById('btn-mic').classList.add('active');
+    };
+
     recognition.onresult = (e) => {
         const text = e.results[0][0].transcript.toLowerCase();
         document.getElementById('btn-mic').classList.remove('active');
-        const nums = text.match(/\d+/g);
-        if(nums) {
-            let p = parseInt(nums[nums.length-1]);
-            if(text.match(/nghìn|ngàn|k/)) if(p < 1000) p *= 1000;
-            const name = text.replace(/\d+|nghìn|ngàn|k/g, '').trim() || "Hàng hóa";
-            cart.push({ name, price: p }); renderCart();
+        document.getElementById('mic-result').innerText = "Vừa nghe: " + text;
+
+        // Tách Tên và Giá bằng cách tìm vị trí số hoặc chữ số đầu tiên
+        const numMarkers = ["0","1","2","3","4","5","6","7","8","9","không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín","mười"];
+        let splitIdx = -1;
+        let words = text.split(' ');
+        
+        for(let i=0; i<words.length; i++){
+            if(numMarkers.some(m => words[i].startsWith(m))){
+                splitIdx = i;
+                break;
+            }
+        }
+
+        if(splitIdx !== -1){
+            let name = words.slice(0, splitIdx).join(' ') || "Hàng hóa";
+            let priceText = words.slice(splitIdx).join(' ');
+            let price = parseVietnameseCurrency(priceText);
+            
+            if(price > 0){
+                cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price });
+                renderCart();
+            }
         }
     };
 
     function renderCart() {
-        const cont = document.getElementById('cart-items'); cont.innerHTML = ''; let t = 0;
-        if(cart.length === 0) cont.innerHTML = '<p style="text-align:center; color:#ccc; padding:15px">Sẵn sàng...</p>';
+        const cont = document.getElementById('cart-items');
+        cont.innerHTML = '';
+        let total = 0;
         cart.forEach((item, i) => {
-            t += item.price;
-            cont.innerHTML += `<div class="item-row-cart"><span>${item.name}</span><span>${item.price.toLocaleString()}đ <button onclick="cart.splice(${i},1);renderCart()" style="border:none;background:none;color:#ddd;margin-left:8px">✕</button></span></div>`;
+            total += item.price;
+            cont.innerHTML += `<div class="item-row-cart">
+                <span>${item.name}</span>
+                <span><b>${item.price.toLocaleString('vi-VN')}đ</b> <button onclick="cart.splice(${i},1);renderCart()" style="border:none;background:none;color:#ccc;margin-left:10px">✕</button></span>
+            </div>`;
         });
-        document.getElementById('total-val').innerText = t.toLocaleString();
+        document.getElementById('total-val').innerText = total.toLocaleString('vi-VN') + 'đ';
     }
 
-    function saveData() {
+    function saveData(method) {
         if(cart.length === 0) return;
         const now = new Date();
-        const dateStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN');
-        
-        cart.forEach(i => {
-            db.history.push({ 
-                id: Date.now() + Math.random(), 
-                date: dateStr, 
-                rawDate: now.getTime(),
-                type: currentMode, 
-                name: i.name, 
-                price: i.price 
-            });
-        });
-        
-        localStorage.setItem('pos_iap_v58_db', JSON.stringify(db));
-        cart = []; 
-        renderCart(); 
-        refreshAll();
+        cart.forEach(i => db.history.push({ 
+            id: Date.now()+Math.random(), 
+            date: now.toLocaleString('vi-VN'), 
+            rawDate: now.getTime(), 
+            type: currentMode, 
+            method, 
+            name: i.name, 
+            price: i.price 
+        }));
+        localStorage.setItem('pos_iap_v61_db', JSON.stringify(db));
+        cart = []; renderCart(); refreshAll(); alert("Đã hoàn tất!");
     }
 
     function refreshAll() {
-        updateDashboard();
-        renderSalesDetail();
-        renderInventory();
-        renderTags();
-    }
-
-    function updateDashboard() {
         const filter = document.getElementById('filter-select').value;
         const now = new Date();
-        let s = 0, b = 0;
+        let s = 0, b = 0; const inv = {};
         db.history.forEach(i => {
-            const iDate = new Date(i.rawDate || 0);
-            let match = false;
-            if(filter === 'day') match = iDate.toDateString() === now.toDateString();
-            else if(filter === 'month') match = iDate.getMonth() === now.getMonth() && iDate.getFullYear() === now.getFullYear();
-            else if(filter === 'year') match = iDate.getFullYear() === now.getFullYear();
-            if(match) { if(i.type === 'SELL') s += i.price; else b += i.price; }
+            const iD = new Date(i.rawDate);
+            let m = (filter==='day' && iD.toDateString()===now.toDateString()) || 
+                    (filter==='month' && iD.getMonth()===now.getMonth()) || 
+                    (filter==='year' && iD.getFullYear()===now.getFullYear());
+            if(m) { if(i.type==='SELL') s+=i.price; else b+=i.price; }
+            if(!inv[i.name]) inv[i.name] = { in: 0, out: 0 };
+            if(i.type==='SELL') inv[i.name].out += i.price; else inv[i.name].in += i.price;
         });
-        document.getElementById('st-sell').innerText = s.toLocaleString() + 'đ';
-        document.getElementById('st-buy').innerText = b.toLocaleString() + 'đ';
-    }
-
-    function renderSalesDetail() {
-        const filter = document.getElementById('filter-select').value;
-        const now = new Date();
-        const cont = document.getElementById('sales-detail-list');
-        cont.innerHTML = '';
-        const filtered = db.history.filter(i => {
-            if (i.type !== 'SELL') return false;
-            const iDate = new Date(i.rawDate || 0);
-            if(filter === 'day') return iDate.toDateString() === now.toDateString();
-            if(filter === 'month') return iDate.getMonth() === now.getMonth() && iDate.getFullYear() === now.getFullYear();
-            if(filter === 'year') return iDate.getFullYear() === now.getFullYear();
-            return true;
-        }).sort((a,b) => (b.rawDate || 0) - (a.rawDate || 0));
-        if (filtered.length === 0) { cont.innerHTML = '<p style="text-align:center; color:#999; font-size:12px">Chưa có dữ liệu bán hàng.</p>'; return; }
-        filtered.forEach(item => {
-            cont.innerHTML += `<div class="detail-row"><div><b>${item.name}</b><span class="detail-time">${item.date}</span></div><div style="display:flex; align-items:center"><b style="color:var(--success)">+${item.price.toLocaleString()}đ</b><button class="btn-del-small" onclick="deleteHistoryItem('${item.id}')">✕</button></div></div>`;
-        });
-    }
-
-    function deleteHistoryItem(id) {
-        if(confirm("Xóa dòng này?")) {
-            db.history = db.history.filter(i => i.id.toString() !== id.toString());
-            localStorage.setItem('pos_iap_v58_db', JSON.stringify(db));
-            refreshAll();
-        }
-    }
-
-    function renderInventory() {
-        const inv = {};
-        db.history.forEach(i => {
-            if(!inv[i.name]) inv[i.name] = { inM: 0, outM: 0 };
-            if(i.type === 'SELL') inv[i.name].outM += i.price; else inv[i.name].inM += i.price;
-        });
+        document.getElementById('st-sell').innerText = s.toLocaleString('vi-VN')+'đ';
+        document.getElementById('st-buy').innerText = b.toLocaleString('vi-VN')+'đ';
         const tbody = document.getElementById('inv-body'); tbody.innerHTML = '';
-        for(let name in inv) {
-            const stock = inv[name].inM - inv[name].outM;
-            tbody.innerHTML += `<tr><td><b>${name}</b></td><td align="right" style="color:var(--purple)">${inv[name].inM.toLocaleString()}</td><td align="right" style="color:var(--success)">${inv[name].outM.toLocaleString()}</td><td align="right" style="font-weight:bold; color:${stock < 0 ? 'red' : '#333'}">${stock.toLocaleString()}</td></tr>`;
+        for(let n in inv) {
+            const tk = inv[n].in - inv[n].out;
+            tbody.innerHTML += `<tr><td><b>${n}</b></td><td align="right">${inv[n].in.toLocaleString('vi-VN')}</td><td align="right">${inv[n].out.toLocaleString('vi-VN')}</td><td align="right" style="font-weight:bold;color:${tk<0?'red':'#333'}">${tk.toLocaleString('vi-VN')}</td></tr>`;
         }
     }
 
     function setMode(m) {
         currentMode = m;
-        document.getElementById('t-sell').classList.toggle('active', m === 'SELL');
-        document.getElementById('t-buy').classList.toggle('active', m === 'BUY');
-        document.getElementById('btn-main-action').style.background = m === 'SELL' ? 'var(--success)' : 'var(--purple)';
+        document.getElementById('t-sell').classList.toggle('active', m==='SELL');
+        document.getElementById('t-buy').classList.toggle('active', m==='BUY');
+        document.getElementById('sell-actions').classList.toggle('hidden', m!=='SELL');
+        document.getElementById('buy-actions').classList.toggle('hidden', m!=='BUY');
     }
 
-    function renderTags() {
-        const area = document.getElementById('tags-area'); area.innerHTML = '';
-        const names = [...new Set(db.history.map(i => i.name))].slice(0, 5);
-        names.forEach(n => {
-            const s = document.createElement('span'); s.className = 'tag'; s.innerText = n;
-            s.onclick = () => { const p = prompt(`Số tiền cho "${n}":`); if(p) { cart.push({name: n, price: parseInt(p)}); renderCart(); } };
-            area.appendChild(s);
-        });
-    }
-
-    function resetDatabase() { if (prompt("Nhập XOA để reset:") === "XOA") { localStorage.removeItem('pos_iap_v58_db'); location.reload(); } }
-
-    // --- HÀM XUẤT EXCEL THEO MẪU BẠN GỬI ---
     function exportExcel() {
-        // Chuẩn bị dữ liệu theo các cột trong mẫu ảnh
-        const excelData = db.history.map((item, index) => {
-            return {
-                "STT": index + 1,
-                "Nhóm": item.type === "SELL" ? "Bán hàng" : "Mua hàng",
-                "Ngày tháng": item.date,
-                "Giao dịch": item.name,
-                "Số tiền": item.price
-            };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(excelData);
+        const data = db.history.map((i, idx) => ({ 
+            "STT": idx+1, 
+            "Nhóm": i.type==='SELL' ? `Bán (${i.method})` : "Mua hàng", 
+            "Ngày tháng": i.date, 
+            "Giao dịch": i.name, 
+            "Số tiền": i.price 
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Tong_Hop_POS_IAP");
-
-        // Đặt tên file theo ngày giờ hiện tại để dễ quản lý
-        const fileName = "Tong_Hop_POS_IAP_" + new Date().toLocaleDateString('vi-VN').replace(/\//g, '-') + ".xlsx";
-        XLSX.writeFile(wb, fileName);
+        XLSX.utils.book_append_sheet(wb, ws, "POS_IAP");
+        XLSX.writeFile(wb, "POS_IAP_Report.xlsx");
     }
 
     refreshAll();
