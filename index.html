@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS-IAP V6.3 - Detailed Sales</title>
+    <title>POS-IAP V6.6 - Smart Suggestions</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --royal-blue: #4169E1; --success: #198754; --danger: #dc3545; --purple: #6f42c1; --bg: #ffffff; --ck-blue: #007bff; }
@@ -12,25 +12,31 @@
         .logo-box { width: 50px; height: 35px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
         .logo-text { color: var(--royal-blue); font-weight: 900; font-size: 14px; letter-spacing: -1px; }
         .brand-name { font-size: 25.3px; font-weight: 800; color: white; letter-spacing: 1px; }
-        .action-header { background: #f8f9fa; padding: 15px; text-align: center; border-bottom: 1px solid #eee; }
+        
+        .action-header { background: #f8f9fa; padding: 15px; text-align: center; border-bottom: 1px solid #eee; position: relative; }
         .nav-tabs { display: flex; background: #e2e6ea; margin: 0 auto 15px auto; border-radius: 25px; overflow: hidden; max-width: 260px; }
         .tab-item { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; cursor: pointer; color: #666; }
         .tab-item.active { background: var(--royal-blue); color: white; }
-        .btn-mic { width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--royal-blue); color: white; font-size: 30px; box-shadow: 0 4px 15px rgba(65,105,225,0.4); }
+        
+        /* Nhập tay & Datalist */
+        .manual-input-group { display: flex; gap: 5px; margin-top: 15px; padding: 0 10px; position: relative; }
+        .manual-input-group input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; width: 50%; }
+        .btn-add-manual { background: var(--royal-blue); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; font-size: 20px; }
+
+        .btn-mic { width: 70px; height: 70px; border-radius: 50%; border: none; background: var(--royal-blue); color: white; font-size: 25px; box-shadow: 0 4px 15px rgba(65,105,225,0.4); margin-bottom: 10px; }
         .btn-mic.active { background: var(--danger); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        
+        .temp-cart { padding: 10px 20px; min-height: 50px; }
         .item-row-cart { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #f1f1f1; font-size: 16px; }
         .total-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fff3cd; margin: 10px 15px; border-radius: 12px; font-weight: 800; font-size: 20px; color: #856404; border: 1px solid #ffeeba; }
         .payment-group { display: flex; gap: 10px; padding: 0 15px 20px 15px; }
         .btn-pay { flex: 1; padding: 18px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         .bottom-reports { border-top: 10px solid #f1f3f5; padding: 20px 15px; background: white; }
         .mini-stat { padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
-        .section-title { margin: 25px 0 10px 0; font-size: 15px; font-weight: 800; color: #333; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        th { text-align: left; color: #aaa; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; color: #aaa; border-bottom: 2px solid #f8f9fa; padding-bottom: 8px; }
         td { padding: 12px 0; border-bottom: 1px solid #fcfcfc; }
-        .detail-row { font-size: 12px; border-bottom: 1px dashed #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
-        .detail-time { color: #999; font-size: 10px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -46,8 +52,17 @@
         <div class="tab-item active" id="t-sell" onclick="setMode('SELL')">BÁN HÀNG</div>
         <div class="tab-item" id="t-buy" onclick="setMode('BUY')">NHẬP HÀNG</div>
     </div>
+    
     <button class="btn-mic" id="btn-mic">🎤</button>
-    <div id="mic-result" style="font-size: 13px; color: var(--royal-blue); margin-top: 10px; font-weight: 500;">Chạm để nói...</div>
+    
+    <div class="manual-input-group">
+        <input type="text" id="manual-name" list="product-list" placeholder="Tên hàng hóa...">
+        <datalist id="product-list">
+            </datalist>
+        <input type="number" id="manual-price" placeholder="Số tiền...">
+        <button class="btn-add-manual" onclick="addManual()">+</button>
+    </div>
+    <div id="mic-result" style="font-size: 11px; color: var(--royal-blue); margin-top: 8px;">Sẵn sàng...</div>
 </div>
 
 <div id="cart-items" style="min-height: 50px;"></div>
@@ -81,56 +96,58 @@
         <div class="mini-stat"><small>Tiền nhập</small><br><b id="st-buy">0đ</b></div>
     </div>
 
-    <div class="section-title">SỔ CHI TIẾT DOANH THU</div>
-    <div id="sales-detail-list" style="max-height: 250px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;"></div>
-
     <div style="margin: 25px 0 10px 0; font-weight: 800;">TỒN KHO <button onclick="exportExcel()" style="float:right; font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button></div>
     <table>
         <thead><tr><th>SẢN PHẨM</th><th align="right">NHẬP</th><th align="right">BÁN</th><th align="right">TỒN</th></tr></thead>
         <tbody id="inv-body"></tbody>
     </table>
-    <button onclick="if(prompt('Nhập XOA để reset:')==='XOA'){localStorage.clear();location.reload();}" style="margin-top:40px; border:none; background:none; color:#ccc; width:100%; font-size:10px;">RESET HỆ THỐNG POS-IAP</button>
 </div>
 
 <script>
     let currentMode = 'SELL', cart = [];
-    let db = JSON.parse(localStorage.getItem('pos_iap_v63_db')) || { history: [] };
-
-    function parseVietnameseCurrency(text) {
-        let str = text.toLowerCase().replace(/,/g, '').replace(/nghìn/g, 'ngàn').replace(/mươi/g, ' mươi ').replace(/linh/g, ' không ').replace(/lẻ/g, ' không ');
-        const dict = { "không":0, "một":1, "mốt":1, "hai":2, "ba":3, "bốn":4, "tư":4, "năm":5, "lăm":5, "sáu":6, "bảy":7, "tám":8, "chín":9, "mười":10 };
-        const multipliers = { "trăm":100, "ngàn":1000, "triệu":1000000, "k":1000 };
-        let words = str.split(/\s+/).filter(w => w.length > 0);
-        let total = 0, currentGroup = 0;
-        words.forEach(w => {
-            if (!isNaN(w)) currentGroup += parseInt(w);
-            else if (dict[w] !== undefined) currentGroup += dict[w];
-            else if (multipliers[w] !== undefined) {
-                if (currentGroup === 0 && w !== "mười") currentGroup = 1;
-                if (w === "ngàn" || w === "triệu") { total += (currentGroup || 1) * multipliers[w]; currentGroup = 0; }
-                else if (w === "trăm") currentGroup *= 100;
-            } else if (w === "mươi") if (currentGroup < 10) currentGroup *= 10;
-        });
-        let finalResult = total + currentGroup;
-        if (finalResult > 0 && finalResult < 1000) finalResult *= 1000;
-        return finalResult;
-    }
+    let db = JSON.parse(localStorage.getItem('pos_iap_v66_db')) || { history: [] };
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'vi-VN';
-    document.getElementById('btn-mic').onclick = () => { recognition.start(); document.getElementById('btn-mic').classList.add('active'); };
 
+    // Cập nhật danh mục gợi ý từ lịch sử
+    function updateSuggestions() {
+        const datalist = document.getElementById('product-list');
+        const uniqueNames = [...new Set(db.history.map(item => item.name))];
+        datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
+    }
+
+    function addManual() {
+        const nameInput = document.getElementById('manual-name');
+        const priceInput = document.getElementById('manual-price');
+        let name = nameInput.value.trim();
+        let price = parseInt(priceInput.value);
+
+        if (name && !isNaN(price)) {
+            if (price > 0 && price < 1000) price *= 1000;
+            cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price });
+            renderCart();
+            nameInput.value = '';
+            priceInput.value = '';
+            nameInput.focus();
+        }
+    }
+
+    document.getElementById('btn-mic').onclick = () => { recognition.start(); document.getElementById('btn-mic').classList.add('active'); };
     recognition.onresult = (e) => {
         const text = e.results[0][0].transcript.toLowerCase();
         document.getElementById('btn-mic').classList.remove('active');
-        document.getElementById('mic-result').innerText = "Vừa nghe: " + text;
         const numMarkers = ["0","1","2","3","4","5","6","7","8","9","không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín","mười"];
         let splitIdx = -1; let words = text.split(' ');
         for(let i=0; i<words.length; i++) if(numMarkers.some(m => words[i].startsWith(m))){ splitIdx = i; break; }
         if(splitIdx !== -1){
             let name = words.slice(0, splitIdx).join(' ') || "Hàng hóa";
-            let price = parseVietnameseCurrency(words.slice(splitIdx).join(' '));
-            if(price > 0){ cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price }); renderCart(); }
+            let rawPrice = words.slice(splitIdx).join(' ').replace(/[^0-9]/g, '');
+            let price = parseInt(rawPrice);
+            if(!isNaN(price)) {
+                if(price < 1000) price *= 1000;
+                cart.push({ name: name.charAt(0).toUpperCase() + name.slice(1), price }); renderCart();
+            }
         }
     };
 
@@ -147,16 +164,14 @@
         if(cart.length === 0) return;
         const now = new Date();
         cart.forEach(i => db.history.push({ id: Date.now()+Math.random(), date: now.toLocaleString('vi-VN'), rawDate: now.getTime(), type: currentMode, method, name: i.name, price: i.price }));
-        localStorage.setItem('pos_iap_v63_db', JSON.stringify(db));
+        localStorage.setItem('pos_iap_v66_db', JSON.stringify(db));
         cart = []; renderCart(); refreshAll();
+        updateSuggestions(); // Làm mới danh mục sau khi lưu
     }
 
     function refreshAll() {
         const filter = document.getElementById('filter-select').value;
         const now = new Date(); let s = 0, b = 0; const inv = {};
-        const contDetail = document.getElementById('sales-detail-list');
-        contDetail.innerHTML = '';
-
         db.history.forEach(i => {
             const iD = new Date(i.rawDate);
             let m = (filter==='day' && iD.toDateString()===now.toDateString()) || (filter==='month' && iD.getMonth()===now.getMonth()) || (filter==='year' && iD.getFullYear()===now.getFullYear());
@@ -164,35 +179,15 @@
             if(!inv[i.name]) inv[i.name] = { in: 0, out: 0 };
             if(i.type==='SELL') inv[i.name].out += i.price; else inv[i.name].in += i.price;
         });
-
-        // Update Stats
         document.getElementById('st-sell').innerText = s.toLocaleString('vi-VN')+'đ';
         document.getElementById('st-buy').innerText = b.toLocaleString('vi-VN')+'đ';
-
-        // Update Sales Detail (Chỉ lấy Bán hàng và lọc theo thời gian)
-        const filteredSales = db.history.filter(i => {
-            if (i.type !== 'SELL') return false;
-            const iD = new Date(i.rawDate);
-            if(filter==='day') return iD.toDateString()===now.toDateString();
-            if(filter==='month') return iD.getMonth()===now.getMonth() && iD.getFullYear()===now.getFullYear();
-            if(filter==='year') return iD.getFullYear()===now.getFullYear();
-            return true;
-        }).reverse();
-
-        if(filteredSales.length === 0) contDetail.innerHTML = '<p style="text-align:center;color:#999;font-size:11px">Chưa có dữ liệu bán hàng.</p>';
-        filteredSales.forEach(item => {
-            contDetail.innerHTML += `<div class="detail-row"><div><b>${item.name}</b> (${item.method})<br><span class="detail-time">${item.date}</span></div><div><b style="color:var(--success)">+${item.price.toLocaleString('vi-VN')}đ</b> <button style="border:none;background:none;color:#ccc;margin-left:5px" onclick="deleteItem('${item.id}')">✕</button></div></div>`;
-        });
-
-        // Update Inventory
         const tbody = document.getElementById('inv-body'); tbody.innerHTML = '';
         for(let n in inv) {
             const tk = inv[n].in - inv[n].out;
             tbody.innerHTML += `<tr><td><b>${n}</b></td><td align="right">${inv[n].in.toLocaleString('vi-VN')}</td><td align="right">${inv[n].out.toLocaleString('vi-VN')}</td><td align="right" style="font-weight:bold;color:${tk<0?'red':'#333'}">${tk.toLocaleString('vi-VN')}</td></tr>`;
         }
+        updateSuggestions();
     }
-
-    function deleteItem(id) { if(confirm("Xóa dòng này?")){ db.history = db.history.filter(i => i.id.toString() !== id.toString()); localStorage.setItem('pos_iap_v63_db', JSON.stringify(db)); refreshAll(); } }
 
     function setMode(m) {
         currentMode = m;
@@ -207,7 +202,7 @@
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "POS_IAP");
-        XLSX.writeFile(wb, "POS_IAP_Report_V6.3.xlsx");
+        XLSX.writeFile(wb, "POS_IAP_V6.6.xlsx");
     }
 
     refreshAll();
