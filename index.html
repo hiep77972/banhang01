@@ -40,7 +40,7 @@
         
         .bottom-reports { border-top: 10px solid #f1f3f5; padding: 20px 15px; background: white; }
         .mini-stat { padding: 12px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
-        .section-title { margin: 25px 0 10px 0; font-size: 15px; font-weight: 800; color: #333; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { background: var(--royal-blue); padding: 18px 15px; margin: 25px 0 10px 0; font-size: 15px; font-weight: 800; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
         
         #sales-detail-list { max-height: 200px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee; margin-top: 10px; }
         .detail-row { font-size: 12px; border-bottom: 1px dashed #ddd; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
@@ -89,8 +89,8 @@
 </div>
 
 <div class="bottom-reports">
-    <div style="display:flex; justify-content:space-between; align-items:center">
-        <h4 style="margin:0; font-size:16px; font-weight: 800; color: var(--royal-blue);">TỔNG HỢP</h4>
+    <div style="background: var(--royal-blue); padding: 18px 15px; margin: 25px 0 10px 0; display:flex; justify-content:space-between; align-items:center;font-size: 15px; font-weight: 800; color: #333;  box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <h4 style="margin:0; font-size:16px; font-weight: 800; color: white;">TỔNG HỢP</h4>
         <select id="filter-select" onchange="refreshAll()" style="font-size: 12px; border: 1px solid #ddd; padding: 6px; border-radius: 8px;">
             <option value="day">Hôm nay</option>
             <option value="month">Tháng này</option>
@@ -103,14 +103,14 @@
         <div class="mini-stat"><small>Tiền nhập</small><br><b id="st-buy">0đ</b></div>
     </div>
 
-    <div class="section-title">SỔ CHI TIẾT DOANH THU</div>
+    <div class="section-title"><span style="color: white">SỔ CHI TIẾT DOANH THU</span></div>
     <div id="sales-detail-list"></div>
 
     <div class="section-title">
-        <span>TỒN KHO</span> 
+        <span style="color: white">TỒN KHO</span> 
         <div>
-            <button onclick="toggleInventory()" style="font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px; margin-right:5px" id="toggle-inv-btn">Hiện</button>
-            <button onclick="exportExcel()" style="font-size:11px; color:var(--royal-blue); border:1px solid var(--royal-blue); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button>
+            <button onclick="toggleInventory()" style="font-size:11px; color: white; border:1px solid var(--bg); background:none; padding:3px 8px; border-radius:5px; margin-right:5px" id="toggle-inv-btn">Hiện</button>
+            <button onclick="exportExcel()" style="font-size:11px; color: white; border:1px solid var(--bg); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button>
         </div>
     </div>
     <table id="inventory-table" style="display: none;">
