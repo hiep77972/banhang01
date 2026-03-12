@@ -114,14 +114,14 @@
     <div id="sales-detail-list"></div>
 
     <div class="section-title">
-        <span style="color: white">TỒN KHO</span> 
+        <span style="color: white">% DT/ GV</span> 
         <div>
             <button onclick="toggleInventory()" style="font-size:11px; color: white; border:1px solid var(--bg); background:none; padding:3px 8px; border-radius:5px; margin-right:5px" id="toggle-inv-btn">Hiện</button>
             <button onclick="exportExcel()" style="font-size:11px; color: white; border:1px solid var(--bg); background:none; padding:3px 8px; border-radius:5px">Xuất Excel</button>
         </div>
     </div>
     <table id="inventory-table" style="display: none;">
-        <thead><tr><th>SẢN PHẨM</th><th style="text-align: right;">NHẬP</th><th style="text-align: right;">BÁN</th><th style="text-align: right;">TỒN</th><th style="text-align: center; width: 40px;"></th></tr></thead>
+        <thead><tr><th>SẢN PHẨM</th><th style="text-align: right;">MUA</th><th style="text-align: right;">BÁN</th><th style="text-align: right;">CHÊNH LỆCH</th><th style="text-align: right;">HS K</th><th style="text-align: center; width: 40px;"></th></tr></thead>
         <tbody id="inv-body"></tbody>
     </table>
 </div>
@@ -237,7 +237,8 @@
         const tbody = document.getElementById('inv-body'); tbody.innerHTML = '';
         for(let n in inv) {
             const tk = inv[n].in - inv[n].out;
-            tbody.innerHTML += `<tr><td><b>${n}</b></td><td align="right" style="color:var(--purple)">${inv[n].in.toLocaleString('vi-VN')}</td><td align="right" style="color:var(--success)">${inv[n].out.toLocaleString('vi-VN')}</td><td align="right" style="font-weight:bold;color:${tk<0?'red':'#333'}">${tk.toLocaleString('vi-VN')}</td><td align="center"><button onclick="deleteInventoryItem('${n}')" style="border:none;background:none;color:#dc3545;cursor:pointer;font-size:16px;padding:2px;" title="Xóa ${n}">✕</button></td></tr>`;
+            const hsk = inv[n].in / inv[n].out;
+            tbody.innerHTML += `<tr><td><b>${n}</b></td><td align="right" style="color:var(--purple)">${inv[n].in.toLocaleString('vi-VN')}</td><td align="right" style="color:var(--success)">${inv[n].out.toLocaleString('vi-VN')}</td><td align="right" style="font-weight:bold;color:${tk<0?'red':'#333'}">${tk.toLocaleString('vi-VN')}</td><td align="right" style="font-weight:bold;color:red">${hsk.toLocaleString('vi-VN')}</td><td align="center"><button onclick="deleteInventoryItem('${n}')" style="border:none;background:none;color:#dc3545;cursor:pointer;font-size:16px;padding:2px;" title="Xóa ${n}">✕</button></td></tr>`;
         }
     }
 
